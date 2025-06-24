@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 from tqdm import tqdm
+import subprocess
 
 class Dithering:
 
@@ -9,11 +10,12 @@ class Dithering:
         print("Starting script, this action may take some time...")
         frames = Dithering.__image_sequence(video_path)
         dithered_frames = []
-        for frame in tqdm(frames, desc='Dithering frames'):
+        for frame in tqdm(frames, desc='Dithering frames', colour="green"):
             processed_frame = Dithering.__image_processing(frame, resolution_scale)
             dithered_frame = Dithering.__dither(processed_frame)
             dithered_frames.append(dithered_frame)
         Dithering.__save_frames(dithered_frames, "output", fps)
+        #Dithering.__apply_sound(video_path)
         print("Script ran succesfully")
 
     @staticmethod
@@ -82,3 +84,44 @@ class Dithering:
         to_float = np.float32(to_grey)
         resized_img = cv2.resize(to_float, (to_float.shape[1] // resolution_scale, to_float.shape[0] // resolution_scale))
         return resized_img
+    
+    @staticmethod
+    def __apply_sound(source_video_path, output_path='output.mp4'):
+        # Single ffmpeg command to copy video and re-encode audio
+        command = [
+            'ffmpeg',
+            '-y',                   # Overwrite output
+            '-i', source_video_path, # Input file
+            '-c:v', 'copy',         # Copy video stream
+            '-c:a', 'aac',          # Re-encode audio to AAC
+            '-map', '0:v:0',        # Select video stream
+            '-map', '0:a:0',        # Select audio stream
+            '-shortest',            # Trim to shortest stream
+            output_path
+        ]
+        subprocess.run(command, check=True)
+
+    @staticmethod
+    def open_image(name):
+        img = cv2.imread(name)
+        img = img.copy().astype(np.float32)
+        
+        if img is None:
+            print("Error: Could not open or find the image.")
+            return
+
+        return img
+
+    @staticmethod
+    def terminal_dither(img_path, res_scale=14, white="-", black="*"):
+
+        img = Dithering.open_image(img_path)
+        img = Dithering.__image_processing(img, res_scale)
+        img = Dithering.__dither(img)
+        lines, columns = img.shape
+
+        for l in range(lines):
+            row = []
+            for c in range(columns):
+                row.append(black if img[l, c] == 255 else white)
+            print(" ".join(map(str, row)))
