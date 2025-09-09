@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+from PIL import Image
 
 def open_image(name, img_scale = 7):
     img = cv2.imread(name)
@@ -28,8 +29,15 @@ def save_image(name, img):
     if img is None:
         print("Error: No image to save.")
         return
+
+    if not name.lower().endswith('.png'):
+        name = name.rsplit('.', 1)[0] + '.png' if '.' in name else name + '.png'
+
+    pil_img = Image.fromarray(img)
+
+    img_1bit = pil_img.convert("1")
+    img_1bit.save(name, "PNG")
     
-    cv2.imwrite(name, img)
     print(f"Image saved as '{name}'")
 
 def dither(img):
@@ -69,12 +77,4 @@ def show_and_dither(name, scale = 7):
 
     return new_name, dithered_img
 
-#show_and_dither("carro.jpg")
-#name, perfil = show_and_dither("titi.jpg")
-
-#save_image(name, perfil)
-
-#show_and_dither("underTheSea.jpg", 10)
-#show_and_dither("couple.jpg", 14)
-
-show_and_dither("prof.png", 3)
+name, perfil = show_and_dither("carro.jpg")
