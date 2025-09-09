@@ -87,19 +87,7 @@ class Dithering:
     
     @staticmethod
     def __apply_sound(source_video_path, output_path='output.mp4'):
-        # Single ffmpeg command to copy video and re-encode audio
-        command = [
-            'ffmpeg',
-            '-y',                   # Overwrite output
-            '-i', source_video_path, # Input file
-            '-c:v', 'copy',         # Copy video stream
-            '-c:a', 'aac',          # Re-encode audio to AAC
-            '-map', '0:v:0',        # Select video stream
-            '-map', '0:a:0',        # Select audio stream
-            '-shortest',            # Trim to shortest stream
-            output_path
-        ]
-        subprocess.run(command, check=True)
+        #Help here!
 
     @staticmethod
     def open_image(name):
