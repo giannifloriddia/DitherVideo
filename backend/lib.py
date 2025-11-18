@@ -88,6 +88,7 @@ class Dithering:
     @staticmethod
     def __apply_sound(source_video_path, output_path='output.mp4'):
         #Help here!
+        pass
 
     @staticmethod
     def open_image(name):

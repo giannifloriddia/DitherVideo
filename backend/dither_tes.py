@@ -3,8 +3,11 @@ import cv2
 from PIL import Image
 
 def open_image(name, img_scale = 7):
-    img = cv2.imread(name)
-    
+    if isinstance(name, str):
+        img = cv2.imread(name)
+    else:
+        img = name
+
     if img is None:
         print("Error: Could not open or find the image.")
         return

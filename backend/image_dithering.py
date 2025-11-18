@@ -2,22 +2,36 @@ import numpy as np
 import cv2
 from PIL import Image
 
-class ImageDithering:
-    def __open_image(name, img_scale = 7):
-        img = cv2.imread(name)
 
+class ImageDithering:
+    
+    @staticmethod
+    def __open_image(name, img_scale=7):
+        if isinstance(name, str):
+            img = cv2.imread(name)
+        else:
+            img = name
+        
         if img is None:
             print("Error: Could not open or find the image.")
-            return
-
-        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            return None
+        
+        if len(img.shape) == 3:
+            gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        else:
+            gray_img = img
+        
         float_img = np.float32(gray_img)
-        resized_img = cv2.resize(float_img, (float_img.shape[1] // img_scale, float_img.shape[0] // img_scale))
-
+        
+        resized_img = cv2.resize(
+            float_img, 
+            (float_img.shape[1] // img_scale, float_img.shape[0] // img_scale)
+        )
+        
         return resized_img
 
+    @staticmethod
     def __dither(img):
-
         img = img.copy().astype(np.float32)
         linhas, colunas = img.shape
 
@@ -39,25 +53,13 @@ class ImageDithering:
 
         return img.astype(np.uint8)
 
-    def __save_image(name, img):
+    @staticmethod
+    def processing(img_input, reducing_scale=7):
+        img = ImageDithering.__open_image(img_input, reducing_scale)
         if img is None:
-            print("Error: No image to save.")
-            return
-
-        if not name.lower().endswith('.png'):
-            name = name.rsplit('.', 1)[0] + '.png' if '.' in name else name + '.png'
-
-        pil_img = Image.fromarray(img)
-
+            raise ValueError("Could not process image")
+        dithered_img = ImageDithering.__dither(img)
+        # Convert to PIL and make 1-bit
+        pil_img = Image.fromarray(dithered_img)
         img_1bit = pil_img.convert("1")
-        img_1bit.save(name, "PNG")
-        
-        print(f"Image saved as '{name}'")
-
-    def processing(img_name, reducing_scale):
-        img = ImageDithering.__open_image(img_name, reducing_scale)
-        dithered = ImageDithering.__dither(img)
-        #ImageDithering.__save_image("Dithered_Image", dithered)
-        return dithered
-
-ImageDithering.processing("carro.jpg", 10)
+        return img_1bit
