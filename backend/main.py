@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, Form, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
 from image_dithering import ImageDithering
@@ -18,7 +18,7 @@ app.add_middleware(
 )
 
 @app.post("/dither_img")
-async def dither_image(image: UploadFile = File(...)):
+async def dither_image(image: UploadFile = File(...), scaling_size: int = Form(7)):
     try:
         # Read uploaded file
         contents = await image.read()
@@ -30,7 +30,7 @@ async def dither_image(image: UploadFile = File(...)):
         if img is None:
             return {"error": "Could not decode image"}
         
-        dithered_img = ImageDithering.processing(img, reducing_scale=7)
+        dithered_img = ImageDithering.processing(img, scaling_size)
         
         # Save to buffer
         buf = BytesIO()

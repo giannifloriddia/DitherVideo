@@ -4,6 +4,7 @@ import * as React from "react";
 function App() {
 
     const [selectedImage, setSelectedImage] = useState<File | null>(null);
+    const [scalingSize, setScalingSize] = useState<number>(7);
 
     const handleFileChange = (event:React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
@@ -12,7 +13,12 @@ function App() {
         }
     };
 
-    const sendImage = async (image: File|null) => {
+    const handleScalingSizeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const value = Number(event.target.value);
+        setScalingSize(value);
+    };
+
+    const sendImage = async (image: File|null, scaling_size: number) => {
 
         if (!image) {
             alert('Please select an image first');
@@ -21,6 +27,7 @@ function App() {
 
         const formData = new FormData();
         formData.append('image', image);
+        formData.append('scaling_size', scaling_size.toString());
 
         try {
             const response = await fetch('http://127.0.0.1:8000/dither_img', {
@@ -42,16 +49,16 @@ function App() {
 
     return (
         <>
-            <h1>Dither Image</h1>
+            <h1>Dither Lab</h1>
             <h2>Insert image</h2>
-            <div>
-                <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                />
-            </div>
-            <button onClick={() => sendImage(selectedImage)}>Submit</button>
+            <input
+                type="file"
+                accept="image/*"
+                onChange={handleFileChange}
+            />
+            <h3>Scaling Size:</h3>
+            <input type={"number"} value={scalingSize} onChange={handleScalingSizeChange} />
+            <button onClick={() => sendImage(selectedImage, scalingSize)}>Submit</button>
         </>
     )
 }
