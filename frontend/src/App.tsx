@@ -4,10 +4,12 @@ import SubmitForm from "./components/SubmitForm.tsx"; // Assuming .tsx extension
 
 function App() {
 
-    const [resultImage, setResultImage] = React.useState<string | null>(null);
+    const [resultMedia, setResultMedia] = React.useState<string | null>(null);
+    const [isVideo, setIsVideo] = React.useState<boolean>(false);
 
-    const handleImageSuccess = (imageUrl: string) => {
-        setResultImage(imageUrl);
+    const handleMediaSuccess = (mediaUrl: string, isVideoFile: boolean) => {
+        setResultMedia(mediaUrl);
+        setIsVideo(isVideoFile);
     }
 
     return (
@@ -15,20 +17,30 @@ function App() {
             <NavBar />
             <div>
                 <h1>Dither Lab</h1>
-                <h2>Insert image</h2>
+                <h2>Insert image or video</h2>
 
-                <SubmitForm onImageProcessed={handleImageSuccess}></SubmitForm>
+                <SubmitForm onMediaProcessed={handleMediaSuccess}></SubmitForm>
 
-                {resultImage && (
+                {resultMedia && (
                     <div>
                         <h3>Result:</h3>
-                        <img
-                            src={resultImage}
-                            alt="Dithered Result"
-                            style={{ maxWidth: "100%", border: "1px solid #ccc" }}
-                        />
+                        {isVideo ? (
+                            <video
+                                src={resultMedia}
+                                controls
+                                style={{ maxWidth: "100%", border: "1px solid #ccc" }}
+                            />
+                        ) : (
+                            <img
+                                src={resultMedia}
+                                alt="Dithered Result"
+                                style={{ maxWidth: "100%", border: "1px solid #ccc" }}
+                            />
+                        )}
                         <br />
-                        <a href={resultImage} download="dithered_image.png">Download Image</a>
+                        <a href={resultMedia} download={isVideo ? "dithered_video.mp4" : "dithered_image.png"}>
+                            Download {isVideo ? "Video" : "Image"}
+                        </a>
                     </div>
                 )}
             </div>

@@ -2,21 +2,58 @@ import numpy as np
 import cv2
 from tqdm import tqdm
 import subprocess
+import tempfile
+import os
 
 class Dithering:
 
     @staticmethod
-    def apply_to_video(video_path, resolution_scale=7, fps=30):
+    def apply_to_video(video_path, resolution_scale=7):
+        """Process video and return bytes of the dithered video."""
         print("Starting script, this action may take some time...")
-        frames = Dithering.__image_sequence(video_path)
+        frames, original_fps = Dithering.__image_sequence(video_path)
+
+        fps = original_fps
+        
         dithered_frames = []
         for frame in tqdm(frames, desc='Dithering frames', colour="green"):
             processed_frame = Dithering.__image_processing(frame, resolution_scale)
             dithered_frame = Dithering.__dither(processed_frame)
             dithered_frames.append(dithered_frame)
-        Dithering.__save_frames(dithered_frames, "output", fps)
-        #Dithering.__apply_sound(video_path)
-        print("Script ran succesfully")
+        
+        video_bytes = Dithering.__save_frames_to_bytes(dithered_frames, fps)
+        print("Script ran successfully")
+        return video_bytes
+
+    @staticmethod
+    def __save_frames_to_bytes(frames, fps):
+        """Save frames to a temporary file and return bytes."""
+        height, width = frames[0].shape[:2]
+        
+        # Create a temporary file
+        with tempfile.NamedTemporaryFile(suffix='.mp4', delete=False) as tmp_file:
+            tmp_path = tmp_file.name
+        
+        try:
+            codec = cv2.VideoWriter_fourcc(*'mp4v')
+            out = cv2.VideoWriter(tmp_path, codec, fps, (width, height))
+            
+            for frame in frames:
+                if len(frame.shape) == 2:
+                    frame = cv2.cvtColor(frame, cv2.COLOR_GRAY2BGR)
+                out.write(frame)
+            
+            out.release()
+            
+            # Read the file bytes
+            with open(tmp_path, 'rb') as f:
+                video_bytes = f.read()
+            
+            return video_bytes
+        finally:
+            # Clean up temporary file
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
     @staticmethod
     def __save_frames(frames, name, fps):
@@ -32,27 +69,27 @@ class Dithering:
 
     @staticmethod
     def __image_sequence(video_path):
-
+        """Extract frames from video and return frames with fps."""
         frames = []
 
         cap = cv2.VideoCapture(video_path)
         if not cap.isOpened():
-            print("Error: Could not open video.")
-            exit()
+            raise ValueError("Error: Could not open video.")
         
-        i = 0
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        if fps == 0:
+            fps = 30  # Default fps
+        
         while True:
-            i += 1
             ret, frame = cap.read()
             if not ret:
                 break
             frames.append(frame)
 
-        print("Frames succesfully accessed")
+        print("Frames successfully accessed")
         cap.release()
-        cv2.destroyAllWindows()
 
-        return frames
+        return frames, fps
     
     @staticmethod
     def __dither(img):
